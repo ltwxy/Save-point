@@ -4,6 +4,7 @@ title GitHub 文件删除助手
 color 0A
 
 :START
+git pull
 cls
 echo ========================================================
 echo           GitHub 文件/文件夹 删除助手
