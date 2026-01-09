@@ -1,50 +1,56 @@
 @echo off
 chcp 65001 >nul
-title 🚀 ACM 训练日结助手
-color 0A
+setlocal enabledelayedexpansion
 
 echo ========================================================
 echo        🚀 ACM 训练日结助手 (Auto Commit Tool)
 echo ========================================================
-
-:: --- 1. 清理垃圾 ---
 echo.
-echo [1/3] 正在清理 .exe 文件...
+
+:: ========================================================
+:: [新增功能] 0. 预处理：清理垃圾
+:: 放在最前面，这样 .exe 文件就不会出现在下面的 Git 变动列表中
+:: ========================================================
+echo [🧹 正在清理] 扫描并删除所有 .exe 文件...
 del /s /q *.exe >nul 2>&1
-echo ✅ 清理完毕。
-
-:: --- 2. 准备提交 ---
+echo ✅ 清理完成！目录已净化。
 echo.
-echo [2/3] 正在扫描变动...
+
+:: 1. 检查状态，列出所有变动的文件
+:: 此时 .exe 已经被删了，git status 只会显示你的代码文件
 git status -s
-
-:: 自动添加脚本本身
-git add daily_commit.bat >nul 2>&1
-
-:: --- 关键修复：防止断行的短提示 ---
 echo.
-set /p msg="请输入备注 (如: AC 1001): "
-
-:: 如果没输入，给个默认值
-if "%msg%"=="" set msg=Daily Update
-
-git add .
-git commit -m "%msg%"
-
-:: --- 3. 推送网络 ---
+echo --------------------------------------------------------
+echo 正在扫描变动文件...
 echo.
-echo [3/3] 正在推送到 GitHub...
-git push
 
-if %errorlevel% neq 0 (
-    color 0C
-    echo.
-    echo ❌ 推送失败！可能是网络问题。
-    echo 💡 提示：如果开了梯子，请配置 Git 代理。
-) else (
-    echo.
-    echo 🎉 大功告成！
+:: 2. 循环处理每一个变动的文件
+:: 这里的逻辑是：只提取文件名，不提交删除的文件
+for /f "tokens=2 delims= " %%f in ('git status -s') do (
+    echo [处理中] %%f
+    
+    :: 3. 询问备注
+    set /p "msg=请输入 %%f 的备注 (直接回车跳过此文件): "
+    
+    :: 4. 如果用户输入了备注，就单独提交这个文件
+    if defined msg (
+        git add %%f
+        git commit -m "%%f - !msg!"
+        echo ✅ 已提交: %%f
+    ) else (
+        echo ⏭️ 已跳过: %%f
+    )
+    
+    echo --------------------------------------------------------
+    :: 清空变量，防止影响下一次循环
+    set "msg="
 )
 
+:: 5. 最后统一推送
 echo.
+echo 正在推送到 GitHub...
+git push
+
+echo.
+echo 🎉 今日任务已归档！绿格子 +1
 pause
