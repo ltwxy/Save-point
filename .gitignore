@@ -71,3 +71,5 @@ Desktop.ini
 # 我们故意【不】忽略 .vscode 文件夹
 # 因为里面有我们辛辛苦苦配置好的 launch.json 和 tasks.json
 # 这样你换电脑时，环境配置会自动同步！
+
+.cph/
